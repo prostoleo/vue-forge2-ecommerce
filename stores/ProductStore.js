@@ -38,6 +38,7 @@ export const useProductStore = defineStore('ProductStore', {
 			this.products = res;
 			return this.products;
 		},
+		//
 
 		async fetchProduct(id) {
 			const products = await this.fetchProducts();
