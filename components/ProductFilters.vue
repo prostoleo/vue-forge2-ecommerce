@@ -1,56 +1,29 @@
 <script setup>
-	import { refDebounced } from '@vueuse/shared';
-
-	const { $contentful } = useNuxtApp();
-
+	import { debouncedWatch, refDebounced } from '@vueuse/core';
 	const productStore = useProductStore();
+	// const { fetchProducts } = useProductStore();
+
+	const router = useRouter();
+
+	const loading = ref(false);
+
+	const loadingDebounced = refDebounced(loading, 500);
+
 	const filters = computed(() => productStore.filters);
-	/* const debounceInput = refDebounced(toRef(filters.value.query), 500, {
-		maxWait: 1000,
-	}); */
-
-	watch(
+	debouncedWatch(
 		filters,
-		// [filters, debounceInput],
 		async () => {
-			useRouter().push({ query: filters.value });
-
+			loading.value = true;
+			router.push({ query: filters.value });
 			await productStore.fetchProducts();
-			// console.log('filters.value.order: ', filters.value.order);
-			// console.log('debounceInput: ', debounceInput);
-
-			/* const isPriceToOrder = filters.value.order.includes('price');
-
-			const contentfulProductsFiltered = await $contentful.getEntries({
-				content_type: 'product',
-				'fields.heatLevel': filters.value['fields.heatLevel'],
-				'fields.name': {
-					match: filters.value.query.toLowerCase(),
-					// match: debounceInput.value.toLowerCase(),
-				},
-				order: isPriceToOrder && filters.value.order,
-			}); */
-
-			/* const filteredProducts = isPriceToOrder ? contentfulProductsFiltered.items : contentfulProductsFiltered.items.sort((a, b) => {
-				if (!filters.value.order.includes('-')) {
-					
-				} else {
-
-				}
-			}) */
-
-			// console.log('filteredProducts: ', filteredProducts);
-
-			// productStore.$state.products = filteredProducts.items;
+			loading.value = false;
 		},
-		{
-			immediate: true,
-			deep: true,
-		}
+		{ deep: true, debounce: 200 }
 	);
 </script>
 <template>
 	<div class="filters-wrapper flex gap-2 items-center">
+		<AppSpinner style="transform: translateY(15px)" v-if="loadingDebounced" />
 		<div class="form-control">
 			<label class="label" for="search">
 				<span class="label-text">Search</span>
